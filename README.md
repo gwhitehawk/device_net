@@ -18,8 +18,8 @@ Run unit tests:
 
 ## Tech Stack
 
-- Java 17
-- Gradle 8.14
+- Java 21
+- Gradle 8.7
 - REST API
 - Spring Boot (simple server app setup)
 
