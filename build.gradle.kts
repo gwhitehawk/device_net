@@ -25,3 +25,10 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+tasks.register<JavaExec>("runClientMain") {
+    group = "application"
+    description = "Runs the Main class in the client package"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("org.example.client.Main")
+}

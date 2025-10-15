@@ -6,44 +6,79 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NetworkNodeTest {
     @Test
-    void testFindChildren() {
-        Device root = new Device("root", "Gateway", "");
-        Device child1 = new Device("child1", "Switch", "root");
-        Device child2 = new Device("child2", "Access Point", "root");
-        Device unrelated = new Device("other", "Switch", "none");
-    
-        Map<String, Device> devices = new HashMap<>();
-        devices.put(root.getMacAddress(), root);
-        devices.put(child1.getMacAddress(), child1);
-        devices.put(child2.getMacAddress(), child2);
-        devices.put(unrelated.getMacAddress(), unrelated);
-    
-        List<Device> children = NetworkNode.findChildren(devices, "root");
-        assertEquals(2, children.size());
-        assertTrue(children.contains(child1));
-        assertTrue(children.contains(child2));
+    void testLinkNodeParentExists() {
+        Device parentDevice = new Device("parent", "Gateway", "");
+        Device childDevice = new Device("child", "Switch", "parent");
+        NetworkNode parentNode = new NetworkNode(parentDevice);
+        NetworkNode childNode = new NetworkNode(childDevice);
+        Map<String, NetworkNode> nodeMap = new HashMap<>();
+        nodeMap.put(parentDevice.getMacAddress(), parentNode);
+        nodeMap.put(childDevice.getMacAddress(), childNode);
+        // Checks that linkNode links childNode to its parent in nodeMap
+        NetworkNode.linkNode(childNode, nodeMap);
+        assertTrue(parentNode.children.contains(childNode));
+        assertTrue(childNode.children.isEmpty());
+        assertTrue(childNode.hasParent);
     }
 
     @Test
-    void testBuildTree() {
-        Device root = new Device("root", "Gateway", "");
-        Device child1 = new Device("child1", "Switch", "root");
-        Device child2 = new Device("child2", "Access Point", "root");
-        Device grandchild = new Device("grandchild", "Access Point", "child1");
-    
-        Map<String, Device> devices = new HashMap<>();
-        devices.put(root.getMacAddress(), root);
-        devices.put(child1.getMacAddress(), child1);
-        devices.put(child2.getMacAddress(), child2);
-        devices.put(grandchild.getMacAddress(), grandchild);
-    
-        NetworkNode tree = NetworkNode.buildTree(devices, root);
-        assertEquals(root, tree.device);
-        assertEquals(2, tree.children.size());
-    
-        NetworkNode child1Node = tree.children.stream().filter(n -> n.device.equals(child1)).findFirst().orElse(null);
-        assertNotNull(child1Node);
-        assertEquals(1, child1Node.children.size());
-        assertEquals(grandchild, child1Node.children.get(0).device);
+    void testLinkNodeParentDoesNotExist() {
+        Device childDevice = new Device("child", "Switch", "parent");
+        NetworkNode childNode = new NetworkNode(childDevice);
+        Map<String, NetworkNode> nodeMap = new HashMap<>();
+        nodeMap.put(childDevice.getMacAddress(), childNode);
+        // Parent does not exist in nodeMap
+        NetworkNode.linkNode(childNode, nodeMap);
+        assertTrue(childNode.children.isEmpty());
+        assertFalse(childNode.hasParent);
+    }
+
+    @Test
+    void testLinkNodeWithExistingChildren() {
+        Device parentDevice = new Device("parent", "Gateway", "");
+        Device childDevice1 = new Device("child1", "Switch", "parent");
+        Device childDevice2 = new Device("child2", "Access Point", "parent");
+        NetworkNode parentNode = new NetworkNode(parentDevice);
+        NetworkNode childNode1 = new NetworkNode(childDevice1);
+        NetworkNode childNode2 = new NetworkNode(childDevice2);
+        Map<String, NetworkNode> nodeMap = new HashMap<>();
+        nodeMap.put(childDevice1.getMacAddress(), childNode1);
+        nodeMap.put(childDevice2.getMacAddress(), childNode2);
+        // Now add parentNode and link
+        nodeMap.put(parentDevice.getMacAddress(), parentNode);
+        NetworkNode.linkNode(parentNode, nodeMap);
+        assertTrue(parentNode.children.contains(childNode1));
+        assertTrue(parentNode.children.contains(childNode2));
+        assertTrue(childNode1.hasParent);
+        assertTrue(childNode2.hasParent);
+    }
+
+    @Test
+    void testLinkNodeNoUplink() {
+        Device device = new Device("node", "Gateway", "");
+        NetworkNode node = new NetworkNode(device);
+        Map<String, NetworkNode> nodeMap = new HashMap<>();
+        nodeMap.put(device.getMacAddress(), node);
+        NetworkNode.linkNode(node, nodeMap);
+        assertTrue(node.children.isEmpty());
+        assertFalse(node.hasParent);
+    }
+
+    @Test
+    void testLinkNodeCircularReference() {
+        Device deviceA = new Device("A", "Switch", "B");
+        Device deviceB = new Device("B", "Switch", "A");
+        NetworkNode nodeA = new NetworkNode(deviceA);
+        NetworkNode nodeB = new NetworkNode(deviceB);
+        Map<String, NetworkNode> nodeMap = new HashMap<>();
+        nodeMap.put(deviceA.getMacAddress(), nodeA);
+        nodeMap.put(deviceB.getMacAddress(), nodeB);
+        // Linking should not create infinite loops
+        NetworkNode.linkNode(nodeA, nodeMap);
+        NetworkNode.linkNode(nodeB, nodeMap);
+        assertTrue(nodeA.children.contains(nodeB));
+        assertTrue(nodeB.children.contains(nodeA));
+        assertTrue(nodeA.hasParent);
+        assertTrue(nodeB.hasParent);
     }
 }
