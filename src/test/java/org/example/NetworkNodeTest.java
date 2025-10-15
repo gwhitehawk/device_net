@@ -65,20 +65,16 @@ public class NetworkNodeTest {
     }
 
     @Test
-    void testLinkNodeCircularReference() {
+    void testLinkNodeCircularReferenceFails() {
         Device deviceA = new Device("A", "Switch", "B");
         Device deviceB = new Device("B", "Switch", "A");
         NetworkNode nodeA = new NetworkNode(deviceA);
         NetworkNode nodeB = new NetworkNode(deviceB);
         Map<String, NetworkNode> nodeMap = new HashMap<>();
         nodeMap.put(deviceA.getMacAddress(), nodeA);
-        nodeMap.put(deviceB.getMacAddress(), nodeB);
-        // Linking should not create infinite loops
         NetworkNode.linkNode(nodeA, nodeMap);
-        NetworkNode.linkNode(nodeB, nodeMap);
-        assertTrue(nodeA.children.contains(nodeB));
-        assertTrue(nodeB.children.contains(nodeA));
-        assertTrue(nodeA.hasParent);
-        assertTrue(nodeB.hasParent);
+        // Linking should not create loops
+        nodeMap.put(deviceB.getMacAddress(), nodeB);
+        assertThrows(IllegalArgumentException.class, () -> NetworkNode.linkNode(nodeB, nodeMap));
     }
 }
