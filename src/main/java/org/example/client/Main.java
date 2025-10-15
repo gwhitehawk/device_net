@@ -18,7 +18,7 @@ public class Main {
         List<String> devices = List.of(accessNode, switchNode, gatewayNode, orphanSwitchNode);
         for (String deviceJson : devices) {
             try {
-                URL url = new URL("http://localhost:8080/api/devices");
+                URL url = URL.of("http://localhost:8080/api/devices");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
@@ -39,7 +39,7 @@ public class Main {
         String[] macAddresses = {"00:11:AA:BB:44:55", "00:11:22:33:44:55", "AA:BB:CC:DD:EE:FF", "FF:EE:DD:CC:BB:AA"};
         for (String mac : macAddresses) {
             try {
-                URL url = new URL("http://localhost:8080/api/devices/" + mac);
+                URL url = URL.of("http://localhost:8080/api/devices/" + mac);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 int responseCode = conn.getResponseCode();
@@ -55,7 +55,7 @@ public class Main {
 
         // Retrieve a sorted list of all devices
         try {
-            URL url = new URL("http://localhost:8080/api/devices");
+            URL url = URL.of("http://localhost:8080/api/devices");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             int responseCode = conn.getResponseCode();
@@ -70,7 +70,7 @@ public class Main {
 
         // Retrieve and print the full network topology
         try {
-            URL url = new URL("http://localhost:8080/api/network");
+            URL url = URL.of("http://localhost:8080/api/network");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             int responseCode = conn.getResponseCode();
@@ -85,7 +85,7 @@ public class Main {
 
         // Retrieve and print the subtree from the switch node
         try {
-            URL url = new URL("http://localhost:8080/api/network/00:11:22:33:44:55");
+            URL url = URL.of("http://localhost:8080/api/network/00:11:22:33:44:55");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             int responseCode = conn.getResponseCode();

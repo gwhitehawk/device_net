@@ -1,12 +1,12 @@
+plugins {
+    id("java")
+    id("org.springframework.boot") version "3.2.6"
+    id("io.spring.dependency-management") version "1.1.4"
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
-}
-
-plugins {
-    id("java")
-    id("org.springframework.boot") version "3.1.5"
-    id("io.spring.dependency-management") version "1.1.3"
 }
 
 group = "org.example"
