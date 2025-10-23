@@ -10,6 +10,9 @@ import java.util.*;
 @RestController
 @RequestMapping("/api")
 public class DeviceController {
+
+    private static final Set<String> VALID_DEVICE_TYPES = Set.of("Access Point", "Switch", "Gateway");
+
     /**
      * In-memory store of devices as NetworkNode objects, keyed by MAC address.
      */
@@ -52,13 +55,19 @@ public class DeviceController {
         if (device.getDeviceType() == null || device.getDeviceType().isEmpty()) {
             throw new IllegalArgumentException("Device type is required");
         }
+        if (VALID_DEVICE_TYPES.stream().noneMatch(dt -> dt.equals(device.getDeviceType()))) {
+            throw new IllegalArgumentException("Invalid device type");
+        }
         if (device.getMacAddress().equals(device.getUplinkMacAddress())) {
             throw new IllegalArgumentException("Device cannot be its own uplink");
         }
+
+        // Potentially add that the uplink must have priority equal or higher.
+        // This was not specified in the requirements, so skipping for now.
     
         NetworkNode node = new NetworkNode(device);
         devices.put(device.getMacAddress(), node);
-        NetworkNode.linkNode(node, devices);  
+        NetworkNode.linkNode(node, devices);
         return device;
     }
 

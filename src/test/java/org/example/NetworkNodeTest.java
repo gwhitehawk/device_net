@@ -71,7 +71,7 @@ public class NetworkNodeTest {
         NetworkNode nodeA = new NetworkNode(deviceA);
         NetworkNode nodeB = new NetworkNode(deviceB);
         Map<String, NetworkNode> nodeMap = new HashMap<>();
-        nodeMap.put(deviceA.getMacAddress(), nodeA);
+         nodeMap.put(deviceA.getMacAddress(), nodeA);
         NetworkNode.linkNode(nodeA, nodeMap);
         // Linking should not create loops
         nodeMap.put(deviceB.getMacAddress(), nodeB);

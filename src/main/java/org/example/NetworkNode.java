@@ -73,6 +73,7 @@ public class NetworkNode {
             if (parent != null) {
                 // Check for cycle: parent must not be a descendant of node
                 if (isSelfDescendant(node, nodeMap)) {
+                    nodeMap.remove(node.device.getMacAddress()); // Clean up to avoid partial addition  
                     throw new IllegalArgumentException("Cycle detected: cannot link node as it would create a cycle.");
                 }
                 linkParentChild(parent, node);
