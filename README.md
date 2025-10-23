@@ -41,6 +41,15 @@ Endpoint `"/devices"`
 
 Method: POST
 
+Curl:
+
+```
+curl -X POST http://localhost:8080/api/devices \
+-H "Content-Type: application/json" \
+-d '{"macAddress": "CC:DD:EE:FF:AA:BB", "deviceType": "Access Point", "uplinkMacAddress": "BB:CC:DD:EE:FF:AA"
+}'
+```
+
 Accepts json.
 
 On insert, a node is created to represent to device and linked with both its parent (if non-empty and exists among registered devices), and already registered children. We allow to register a device with uplink MAC address not yet registered. If the parent is added later, the existing child is subsequently linked to it. In topology retrieval, nodes with set uplink MAC but non-registered parent are treated as root nodes.
@@ -59,6 +68,12 @@ Endpoint: `"/devices"`
 
 Method: GET
 
+Curl:
+
+```
+curl -X GET http://localhost:8080/api/devices
+```
+
 Devices are sorted runtime. For better performance, we could maintain a sorted index by deviceType in memory (e.g. as a linked list for easy insertion) or in a db.
 
 
@@ -68,6 +83,11 @@ Endpoint: `"/devices/{macAddress}"`
 
 Method: GET
 
+Curl:
+
+```
+curl -X GET http://localhost:8080/api/devices/AA:BB:CC:DD:EE:FF
+```
 
 ### Network
 
@@ -76,5 +96,13 @@ Endpoints:
 `"/network/{rootMacAddress}"`
 
 Method: GET
+
+Curl:
+
+```
+curl -X GET http://localhost:8080/api/network
+
+curl -X GET http://localhost:8080/api/network/AA:BB:CC:DD:EE:FF
+```
 
 The network topology is maintained on device insertion. The specified root node (or all top-level nodes) is returned.

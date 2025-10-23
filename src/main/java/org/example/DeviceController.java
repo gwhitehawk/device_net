@@ -1,6 +1,9 @@
 package org.example;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.*;
 
 /**
@@ -34,6 +37,9 @@ public class DeviceController {
      */
     @GetMapping("/devices/{macAddress}")
     public Device getDevice(@PathVariable String macAddress) {
+        if (!devices.containsKey(macAddress)) {
+            return null;
+        }
         return devices.get(macAddress).device;
     }
 
@@ -47,19 +53,19 @@ public class DeviceController {
     public Device addDevice(@RequestBody Device device) {
         // Basic validation
         if (device.getMacAddress() == null || device.getMacAddress().isEmpty()) {
-            throw new IllegalArgumentException("MAC address is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MAC address is required");
         }
         if (devices.containsKey(device.getMacAddress())) {
-            throw new IllegalArgumentException("Device with this MAC address already exists");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device with this MAC address already exists");
         }
         if (device.getDeviceType() == null || device.getDeviceType().isEmpty()) {
-            throw new IllegalArgumentException("Device type is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device type is required");
         }
         if (VALID_DEVICE_TYPES.stream().noneMatch(dt -> dt.equals(device.getDeviceType()))) {
-            throw new IllegalArgumentException("Invalid device type");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid device type");
         }
         if (device.getMacAddress().equals(device.getUplinkMacAddress())) {
-            throw new IllegalArgumentException("Device cannot be its own uplink");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Device cannot be its own uplink");
         }
 
         // Potentially add that the uplink must have priority equal or higher.
@@ -67,7 +73,12 @@ public class DeviceController {
     
         NetworkNode node = new NetworkNode(device);
         devices.put(device.getMacAddress(), node);
-        NetworkNode.linkNode(node, devices);
+        try {
+            NetworkNode.linkNode(node, devices);
+        } catch (IllegalArgumentException e) {
+            devices.remove(device.getMacAddress()); // Clean up if linking fails
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
         return device;
     }
 
@@ -78,6 +89,9 @@ public class DeviceController {
      */
     @GetMapping("/network/{rootMacAddress}")
     public NetworkNode getNetwork(@PathVariable String rootMacAddress) {
+        if (!devices.containsKey(rootMacAddress)) {
+            return null;
+        }
         return devices.get(rootMacAddress);
     }
 

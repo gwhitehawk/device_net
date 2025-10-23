@@ -2,6 +2,8 @@ package org.example;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,35 +30,45 @@ public class DeviceControllerTest {
     void testAddDeviceWithNullMacAddress() {
         Device device = new Device(null, "Gateway", "");
         
-        assertThrows(IllegalArgumentException.class, () -> controller.addDevice(device));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.addDevice(device));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("MAC address is required", exception.getReason());
     }
     
     @Test
     void testAddDeviceWithEmptyMacAddress() {
         Device device = new Device("", "Gateway", "");
         
-        assertThrows(IllegalArgumentException.class, () -> controller.addDevice(device));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.addDevice(device));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("MAC address is required", exception.getReason());
     }
     
     @Test
     void testAddDeviceWithNullDeviceType() {
         Device device = new Device("AA:BB:CC:DD:EE:FF", null, "");
         
-        assertThrows(IllegalArgumentException.class, () -> controller.addDevice(device));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.addDevice(device));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Device type is required", exception.getReason());
     }
     
     @Test
     void testAddDeviceWithEmptyDeviceType() {
         Device device = new Device("AA:BB:CC:DD:EE:FF", "", "");
         
-        assertThrows(IllegalArgumentException.class, () -> controller.addDevice(device));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.addDevice(device));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Device type is required", exception.getReason());
     }
 
     @Test
     void testAddDeviceWithUnsupportedDeviceType() {
         Device device = new Device("AA:BB:CC:DD:EE:FF", "Router", "");
         
-        assertThrows(IllegalArgumentException.class, () -> controller.addDevice(device));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.addDevice(device));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Invalid device type", exception.getReason());
     }
     
     @Test
@@ -66,14 +78,18 @@ public class DeviceControllerTest {
         
         controller.addDevice(device1);
         
-        assertThrows(IllegalArgumentException.class, () -> controller.addDevice(device2));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.addDevice(device2));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Device with this MAC address already exists", exception.getReason());
     }
     
     @Test
     void testAddDeviceWithSelfUplink() {
         Device device = new Device("AA:BB:CC:DD:EE:FF", "Gateway", "AA:BB:CC:DD:EE:FF");
         
-        assertThrows(IllegalArgumentException.class, () -> controller.addDevice(device));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.addDevice(device));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Device cannot be its own uplink", exception.getReason());
     }
     
     @Test
@@ -89,6 +105,12 @@ public class DeviceControllerTest {
         assertEquals(device.getUplinkMacAddress(), result.getUplinkMacAddress());
     }
     
+    @Test
+    void testGetNonExistingDevice() {
+        Device result = controller.getDevice("FF:EE:DD:CC:BB:AA");
+        assertNull(result);
+    }
+
     @Test
     void testListDevicesEmpty() {
         List<Device> devices = controller.listDevices();
@@ -131,7 +153,13 @@ public class DeviceControllerTest {
         assertTrue(network.children.stream().anyMatch(child -> 
             child.device.getMacAddress().equals("BB:CC:DD:EE:FF:AA")));
     }
-    
+
+    @Test
+    void testGetNetworkRootNotFound() {
+        NetworkNode result = controller.getNetwork("FF:EE:DD:CC:BB:AA");
+        assertNull(result);
+    }
+
     @Test
     void testGetFullNetwork() {
         Device gateway1 = new Device("AA:BB:CC:DD:EE:FF", "Gateway", "");
@@ -186,7 +214,8 @@ public class DeviceControllerTest {
         controller.addDevice(switchDevice);
 
         // Attempt to add a cycle-inducing device
-        assertThrows(IllegalArgumentException.class, () -> controller.addDevice(accessPoint));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> controller.addDevice(accessPoint));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertEquals(2, controller.listDevices().size()); // Ensure no additional device was added
     }
 }
