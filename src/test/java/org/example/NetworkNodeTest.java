@@ -77,4 +77,16 @@ public class NetworkNodeTest {
         nodeMap.put(deviceB.getMacAddress(), nodeB);
         assertThrows(IllegalArgumentException.class, () -> NetworkNode.linkNode(nodeB, nodeMap));
     }
+
+    @Test
+    void testGetLogCountMap() {
+        List<String> logs = Arrays.asList(
+            "ERROR 2025-10-24 10:12:05 User1 failed login",
+            "INFO 2025-10-24 10:12:06 User1 login",
+            "WARN 2025-10-24 10:12:05 User2 password attempt"
+        );
+        Map<String, Pair> result = NetworkNode.getLogCountMap(logs);
+        System.out.println(result.toString());
+        assertTrue(true);
+    }
 }

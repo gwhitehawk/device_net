@@ -88,4 +88,25 @@ public class NetworkNode {
             }
         }
     }
+
+
+    public static Map<String, Pair> getLogCountMap(List<String> logs) {
+        Map<String, Map<String, Integer>> logCountMap = new HashMap<>();
+        for (String log : logs) {
+            String[] logParts = log.split(" ", 0);
+            Map<String, Integer> userMap = logCountMap.getOrDefault(logParts[3], new HashMap<>());
+            userMap.put(logParts[0], userMap.getOrDefault(logParts[0], 0) + 1);
+            logCountMap.put(logParts[3], userMap);
+        }
+        Map<String, Pair> mostCommonUserByErrorType = new HashMap<>();
+        for (Map.Entry<String, Map<String, Integer>> entry : logCountMap.entrySet()) {
+            for (Map.Entry<String, Integer> errorEntry : entry.getValue().entrySet()) {
+                if (mostCommonUserByErrorType.get(errorEntry.getKey()) == null ||
+                    errorEntry.getValue() > mostCommonUserByErrorType.get(errorEntry.getKey()).count) {
+                    mostCommonUserByErrorType.put(errorEntry.getKey(), new Pair(entry.getKey(), errorEntry.getValue()));
+                }
+            }
+        }
+        return mostCommonUserByErrorType;
+    }
 }
